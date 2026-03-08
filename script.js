@@ -1,7 +1,6 @@
 const menu = document.getElementById("menu")
 const levelPage = document.getElementById("levelPage")
 const levelTitle = document.getElementById("levelTitle")
-const levelText = document.getElementById("levelText")
 
 function openLevel(level){
 
@@ -10,15 +9,16 @@ levelPage.classList.remove("hidden")
 
 levelTitle.innerText="Level "+level
 
-let text=""
-
-for(let i=1;i<=50;i++){
-
-text+="Line "+i+": Time flows through the universe, shaping change and motion. "
-
-}
-
-levelText.innerText=text
+document.getElementById("story1").innerText=""
+document.getElementById("story2").innerText=""
+document.getElementById("story3").innerText=""
+document.getElementById("story4").innerText=""
+document.getElementById("story5").innerText=""
+document.getElementById("story6").innerText=""
+document.getElementById("story7").innerText=""
+document.getElementById("story8").innerText=""
+document.getElementById("story9").innerText=""
+document.getElementById("story10").innerText=""
 
 }
 
@@ -29,7 +29,9 @@ levelPage.classList.add("hidden")
 
 }
 
-const canvas=document.getElementById("stars")
+/* STAR BACKGROUND */
+
+const canvas=document.getElementById("universe")
 const ctx=canvas.getContext("2d")
 
 canvas.width=window.innerWidth
@@ -37,13 +39,13 @@ canvas.height=window.innerHeight
 
 let stars=[]
 
-for(let i=0;i<200;i++){
+for(let i=0;i<250;i++){
 
 stars.push({
 x:Math.random()*canvas.width,
 y:Math.random()*canvas.height,
 size:Math.random()*2,
-speed:Math.random()*0.5
+speed:Math.random()*0.6
 })
 
 }
