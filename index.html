@@ -1,1286 +1,1072 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>NeuroDesk Scheduler — Control Your Time</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hill Climb Racer</title>
 <style>
-  /* ─── RESET & BASE ─────────────────────────────────────── */
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  :root {
-    --bg:        #080c14;
-    --bg2:       #0d1320;
-    --bg3:       #111827;
-    --surface:   rgba(255,255,255,0.04);
-    --border:    rgba(255,255,255,0.08);
-    --border2:   rgba(100,220,255,0.18);
-    --cyan:      #38d9f5;
-    --cyan2:     #0ea5e9;
-    --violet:    #7c3aed;
-    --violet2:   #a78bfa;
-    --green:     #22d3a0;
-    --orange:    #fb923c;
-    --red:       #f87171;
-    --text:      #e8f0fe;
-    --muted:     #8899b4;
-    --font-head: 'Syne', sans-serif;
-    --font-body: 'DM Sans', sans-serif;
-    --r:         16px;
-    --r2:        24px;
-  }
-  html { scroll-behavior: smooth; }
+  /* ===== GLOBAL RESET & BASE STYLES ===== */
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
   body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--font-body);
-    font-size: 16px;
-    line-height: 1.65;
-    overflow-x: hidden;
-  }
-  ::selection { background: rgba(56,217,245,.25); }
-
-  /* ─── SCROLLBAR ────────────────────────────────────────── */
-  ::-webkit-scrollbar { width: 6px; }
-  ::-webkit-scrollbar-track { background: var(--bg); }
-  ::-webkit-scrollbar-thumb { background: var(--violet); border-radius: 99px; }
-
-  /* ─── NOISE OVERLAY ────────────────────────────────────── */
-  body::before {
-    content:''; position:fixed; inset:0; z-index:0; pointer-events:none;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
-    opacity: 0.025;
+    background: #0a0a1a;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    overflow: hidden;
+    font-family: 'Segoe UI', sans-serif;
   }
 
-  /* ─── AMBIENT BLOBS ───────────────────────────────────── */
-  .blob {
-    position: fixed; border-radius: 50%; filter: blur(120px);
-    pointer-events: none; z-index: 0; animation: blobDrift 18s ease-in-out infinite alternate;
-  }
-  .blob-1 { width:600px;height:600px; background:rgba(124,58,237,.2); top:-200px; left:-200px; animation-delay:0s; }
-  .blob-2 { width:500px;height:500px; background:rgba(56,217,245,.12); bottom:-200px; right:-150px; animation-delay:-6s; }
-  .blob-3 { width:350px;height:350px; background:rgba(34,211,160,.1); top:40%; left:40%; animation-delay:-12s; }
-  @keyframes blobDrift { to { transform: translate(60px,40px) scale(1.08); } }
-
-  /* ─── LAYOUT HELPERS ──────────────────────────────────── */
-  .container { max-width: 1160px; margin: 0 auto; padding: 0 28px; position: relative; z-index: 2; }
-  section { position: relative; z-index: 2; }
-
-  /* ─── NAVBAR ──────────────────────────────────────────── */
-  nav {
-    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-    padding: 0 28px;
-    transition: background .4s, backdrop-filter .4s, border-color .4s;
-  }
-  nav.scrolled {
-    background: rgba(8,12,20,.75);
-    backdrop-filter: blur(18px);
-    border-bottom: 1px solid var(--border);
-  }
-  .nav-inner {
-    max-width: 1160px; margin: 0 auto;
-    display: flex; align-items: center; justify-content: space-between;
-    height: 68px;
-  }
-  .nav-logo {
-    font-family: var(--font-head); font-weight: 800; font-size: 1.15rem;
-    letter-spacing: -.02em; color: var(--text); text-decoration: none;
-    display: flex; align-items: center; gap: 10px;
-  }
-  .nav-logo-icon {
-    width: 32px; height: 32px; border-radius: 8px;
-    background: linear-gradient(135deg, var(--violet), var(--cyan2));
-    display: flex; align-items: center; justify-content: center; font-size: .9rem;
-  }
-  .nav-links { display: flex; align-items: center; gap: 32px; }
-  .nav-links a {
-    color: var(--muted); text-decoration: none; font-size: .9rem; font-weight: 500;
-    transition: color .2s; letter-spacing: .01em;
-  }
-  .nav-links a:hover { color: var(--text); }
-  .nav-cta {
-    padding: 8px 22px; border-radius: 99px;
-    background: linear-gradient(135deg, var(--violet), var(--cyan2));
-    color: #fff !important; font-weight: 600 !important; font-size: .88rem !important;
-    transition: opacity .2s, transform .2s !important;
-  }
-  .nav-cta:hover { opacity: .88; transform: translateY(-1px) !important; color:#fff !important; }
-  .hamburger { display: none; flex-direction: column; gap: 5px; cursor: pointer; }
-  .hamburger span { width: 24px; height: 2px; background: var(--muted); border-radius: 2px; transition: .3s; }
-  .mobile-menu {
-    display: none; position: fixed; inset: 0; z-index: 99; padding-top: 80px;
-    background: rgba(8,12,20,.97); backdrop-filter: blur(20px);
-    flex-direction: column; align-items: center; gap: 28px;
-  }
-  .mobile-menu.open { display: flex; }
-  .mobile-menu a { color: var(--text); font-size: 1.2rem; text-decoration: none; font-weight: 600; }
-  .mobile-close { position: absolute; top: 20px; right: 28px; font-size: 1.6rem; cursor: pointer; color: var(--muted); }
-
-  /* ─── HERO ────────────────────────────────────────────── */
-  #hero {
-    min-height: 100vh; display: flex; align-items: center;
-    padding: 140px 0 100px;
-    background: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(124,58,237,.25) 0%, transparent 70%);
-  }
-  .hero-inner {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center;
-  }
-  .hero-badge {
-    display: inline-flex; align-items: center; gap: 8px;
-    padding: 6px 16px; border-radius: 99px;
-    background: rgba(56,217,245,.08); border: 1px solid rgba(56,217,245,.2);
-    font-size: .78rem; font-weight: 600; color: var(--cyan); letter-spacing: .08em;
-    text-transform: uppercase; margin-bottom: 20px;
-    animation: fadeInUp .6s ease both;
-  }
-  .hero-badge span { width:6px;height:6px;border-radius:50%;background:var(--cyan);animation:pulse 2s infinite; }
-  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.8)} }
-  .hero-title {
-    font-family: var(--font-head); font-weight: 800; font-size: clamp(2.4rem,5vw,3.8rem);
-    line-height: 1.08; letter-spacing: -.04em; margin-bottom: 20px;
-    animation: fadeInUp .6s .1s ease both;
-  }
-  .hero-title .grad {
-    background: linear-gradient(135deg, var(--cyan) 0%, var(--violet2) 50%, var(--cyan2) 100%);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-  }
-  .hero-sub {
-    color: var(--muted); font-size: 1.1rem; max-width: 440px; line-height: 1.7; margin-bottom: 36px;
-    animation: fadeInUp .6s .2s ease both;
-  }
-  .hero-actions { display: flex; gap: 14px; flex-wrap: wrap; animation: fadeInUp .6s .3s ease both; }
-  .btn-primary {
-    display: inline-flex; align-items: center; gap: 10px;
-    padding: 14px 32px; border-radius: 99px; border: none; cursor: pointer;
-    background: linear-gradient(135deg, var(--violet) 0%, var(--cyan2) 100%);
-    color: #fff; font-weight: 700; font-size: 1rem; font-family: var(--font-body);
-    text-decoration: none; position: relative; overflow: hidden;
-    transition: transform .25s, box-shadow .25s;
-    box-shadow: 0 0 32px rgba(124,58,237,.35);
-  }
-  .btn-primary::before {
-    content:''; position:absolute; inset:0;
-    background: linear-gradient(135deg, rgba(255,255,255,.15) 0%, transparent 60%);
-    opacity:0; transition: opacity .25s;
-  }
-  .btn-primary:hover { transform:translateY(-3px); box-shadow:0 8px 40px rgba(124,58,237,.5); }
-  .btn-primary:hover::before { opacity:1; }
-  .btn-secondary {
-    display: inline-flex; align-items: center; gap: 10px;
-    padding: 14px 28px; border-radius: 99px; border: 1px solid var(--border2);
-    background: var(--surface); color: var(--text); font-weight: 500;
-    font-size: 1rem; font-family: var(--font-body); text-decoration: none; cursor: pointer;
-    backdrop-filter: blur(12px); transition: border-color .25s, background .25s, transform .25s;
-  }
-  .btn-secondary:hover { border-color: var(--cyan); background: rgba(56,217,245,.07); transform: translateY(-2px); }
-
-  /* HERO MOCKUP */
-  .hero-visual { animation: fadeInRight .8s .2s ease both; position: relative; }
-  .mockup-wrap {
-    position: relative; border-radius: var(--r2);
-    background: rgba(255,255,255,.04); border: 1px solid var(--border2);
-    backdrop-filter: blur(20px); overflow: hidden;
-    box-shadow: 0 32px 80px rgba(0,0,0,.6), 0 0 0 1px var(--border), inset 0 1px 0 rgba(255,255,255,.06);
-  }
-  .mockup-bar {
-    display: flex; align-items: center; gap: 8px; padding: 14px 18px;
-    border-bottom: 1px solid var(--border);
-    background: rgba(255,255,255,.02);
-  }
-  .mockup-dot { width:11px;height:11px;border-radius:50%; }
-  .mockup-dot:nth-child(1) { background:#f87171; }
-  .mockup-dot:nth-child(2) { background:#fbbf24; }
-  .mockup-dot:nth-child(3) { background:#34d399; }
-  .mockup-title-bar { flex:1; text-align:center; font-size:.75rem; color:var(--muted); font-family:var(--font-body); }
-  .mockup-body { padding: 20px; }
-  /* Fake dashboard */
-  .dash-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 14px; }
-  .dash-card {
-    border-radius: 12px; padding: 14px; position: relative; overflow: hidden;
-    border: 1px solid var(--border);
-  }
-  .dash-card.c1 { background: linear-gradient(135deg, rgba(124,58,237,.25), rgba(56,217,245,.1)); }
-  .dash-card.c2 { background: linear-gradient(135deg, rgba(56,217,245,.2), rgba(34,211,160,.1)); }
-  .dash-card.c3 { background: linear-gradient(135deg, rgba(251,146,60,.2), rgba(248,113,113,.1)); }
-  .dash-card-label { font-size:.65rem; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; margin-bottom:4px; font-family:var(--font-body); }
-  .dash-card-val { font-family:var(--font-head); font-weight:700; font-size:1.4rem; }
-  .dash-card-sub { font-size:.62rem; color:var(--muted); margin-top:2px; }
-  .dash-card.c1 .dash-card-val { color:var(--violet2); }
-  .dash-card.c2 .dash-card-val { color:var(--cyan); }
-  .dash-card.c3 .dash-card-val { color:var(--orange); }
-  .dash-main { display: grid; grid-template-columns: 1.4fr 1fr; gap: 12px; }
-  .dash-tasks { background:rgba(255,255,255,.03); border:1px solid var(--border); border-radius:12px; padding:14px; }
-  .dash-tasks-title { font-size:.7rem; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; margin-bottom:10px; }
-  .task-row {
-    display:flex; align-items:center; gap:8px; padding:6px 0;
-    border-bottom:1px solid var(--border);
-  }
-  .task-row:last-child { border-bottom:none; }
-  .task-dot { width:7px;height:7px;border-radius:50%;flex-shrink:0; }
-  .task-text { font-size:.72rem; color:var(--text); }
-  .task-time { font-size:.62rem; color:var(--muted); margin-left:auto; }
-  .dash-alarm { background:rgba(255,255,255,.03); border:1px solid var(--border); border-radius:12px; padding:14px; }
-  .dash-alarm-title { font-size:.7rem; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; margin-bottom:10px; }
-  .alarm-item { display:flex;align-items:center;gap:8px;margin-bottom:8px; }
-  .alarm-time-big { font-family:var(--font-head);font-weight:700;font-size:1.1rem;color:var(--cyan); }
-  .alarm-label { font-size:.68rem; color:var(--muted); }
-  .alarm-toggle {
-    margin-left:auto; width:28px; height:16px; border-radius:99px;
-    border:none; cursor:pointer; position:relative; transition:.2s;
-  }
-  .alarm-toggle.on { background:var(--cyan2); }
-  .alarm-toggle.off { background:rgba(255,255,255,.1); }
-  .alarm-toggle::after {
-    content:''; position:absolute; top:2px; width:12px;height:12px;
-    border-radius:50%; background:#fff; transition:.2s;
-  }
-  .alarm-toggle.on::after { left:14px; }
-  .alarm-toggle.off::after { left:2px; }
-  .countdown-bar { background:rgba(255,255,255,.03); border:1px solid var(--border); border-radius:12px; padding:14px; margin-top:12px; }
-  .countdown-title { font-size:.7rem; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; margin-bottom:8px; }
-  .countdown-digits { display:flex;gap:6px;align-items:center; }
-  .cd-block { background:rgba(124,58,237,.2); border:1px solid rgba(124,58,237,.3); border-radius:6px; padding:4px 8px; font-family:var(--font-head); font-weight:700; font-size:.9rem; color:var(--violet2); min-width:30px; text-align:center; }
-  .cd-sep { color:var(--muted); font-weight:700; }
-  /* floating badges on hero */
-  .hero-float {
-    position:absolute; background:rgba(13,19,32,.9); border:1px solid var(--border2);
-    backdrop-filter:blur(12px); border-radius:12px; padding:10px 14px;
-    font-size:.75rem; display:flex;align-items:center;gap:8px;
-    box-shadow:0 8px 32px rgba(0,0,0,.4); animation:floatY 4s ease-in-out infinite;
-  }
-  .hero-float.f1 { bottom:-18px; left:-30px; animation-delay:0s; }
-  .hero-float.f2 { top: 30px; right:-24px; animation-delay:-2s; }
-  @keyframes floatY { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
-  .float-icon { font-size:1.1rem; }
-  .float-text { line-height:1.2; }
-  .float-text b { color:var(--cyan); display:block; font-size:.85rem; }
-
-  /* ─── SECTION HEADER ──────────────────────────────────── */
-  .section-header { text-align:center; margin-bottom: 60px; }
-  .section-eyebrow {
-    display:inline-block; font-size:.72rem; font-weight:700; letter-spacing:.12em;
-    text-transform:uppercase; color:var(--cyan); margin-bottom:12px;
-    padding:4px 14px; border-radius:99px;
-    background:rgba(56,217,245,.07); border:1px solid rgba(56,217,245,.15);
-  }
-  .section-title {
-    font-family:var(--font-head); font-weight:800; font-size: clamp(1.8rem,3.5vw,2.8rem);
-    letter-spacing:-.035em; margin-bottom:14px;
-  }
-  .section-sub { color:var(--muted); font-size:1.05rem; max-width:520px; margin:0 auto; }
-
-  /* ─── FEATURES ────────────────────────────────────────── */
-  #features { padding: 120px 0; }
-  #features::before {
-    content:''; position:absolute; inset:0; z-index:0;
-    background: radial-gradient(ellipse 60% 50% at 50% 50%, rgba(124,58,237,.08) 0%, transparent 70%);
-  }
-  .features-grid {
-    display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;
-  }
-  .feat-card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--r2); padding: 28px 24px;
-    backdrop-filter: blur(16px); position: relative; overflow: hidden;
-    transition: transform .3s, border-color .3s, box-shadow .3s;
-    cursor: default;
-  }
-  .feat-card::before {
-    content:''; position:absolute; inset:0; border-radius: inherit; opacity:0;
-    background: radial-gradient(circle at var(--mx,50%) var(--my,50%), rgba(124,58,237,.18), transparent 60%);
-    transition: opacity .4s;
-  }
-  .feat-card:hover { transform:translateY(-6px); border-color:var(--border2); box-shadow:0 20px 50px rgba(0,0,0,.3); }
-  .feat-card:hover::before { opacity:1; }
-  .feat-icon {
-    width:48px;height:48px;border-radius:12px;margin-bottom:18px;
-    display:flex;align-items:center;justify-content:center;font-size:1.4rem;
-    position:relative;z-index:1;
-  }
-  .feat-icon.vi { background:linear-gradient(135deg,rgba(124,58,237,.3),rgba(167,139,250,.15)); border:1px solid rgba(124,58,237,.3); }
-  .feat-icon.cy { background:linear-gradient(135deg,rgba(56,217,245,.25),rgba(14,165,233,.15)); border:1px solid rgba(56,217,245,.25); }
-  .feat-icon.gr { background:linear-gradient(135deg,rgba(34,211,160,.25),rgba(16,185,129,.1)); border:1px solid rgba(34,211,160,.25); }
-  .feat-icon.or { background:linear-gradient(135deg,rgba(251,146,60,.25),rgba(245,158,11,.1)); border:1px solid rgba(251,146,60,.25); }
-  .feat-icon.re { background:linear-gradient(135deg,rgba(248,113,113,.25),rgba(239,68,68,.1)); border:1px solid rgba(248,113,113,.25); }
-  .feat-icon.bl { background:linear-gradient(135deg,rgba(96,165,250,.25),rgba(59,130,246,.1)); border:1px solid rgba(96,165,250,.25); }
-  .feat-name { font-family:var(--font-head); font-weight:700; font-size:1.1rem; margin-bottom:8px; position:relative;z-index:1; }
-  .feat-desc { color:var(--muted); font-size:.9rem; line-height:1.6; position:relative;z-index:1; }
-
-  /* ─── SCREENSHOTS ────────────────────────────────────── */
-  #preview { padding: 120px 0; background: var(--bg2); }
-  #preview::before {
-    content:''; position:absolute; inset:0; z-index:0;
-    background: radial-gradient(ellipse 50% 60% at 80% 50%, rgba(56,217,245,.06) 0%, transparent 70%);
-  }
-  .screenshots-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:18px; }
-  .screenshot {
-    border-radius: var(--r); overflow:hidden; position:relative; cursor:pointer;
-    border:1px solid var(--border);
-    transition:transform .3s, box-shadow .3s, border-color .3s;
-    aspect-ratio: 16/10;
-  }
-  .screenshot:hover { transform:translateY(-4px) scale(1.01); box-shadow:0 20px 50px rgba(0,0,0,.5); border-color:var(--border2); }
-  .screenshot:nth-child(1) { grid-column:span 2; }
-  .ss-inner { width:100%;height:100%; display:flex; flex-direction:column; }
-  /* each screenshot is a mini fake UI */
-  .ss-bar { display:flex;align-items:center;gap:6px;padding:10px 14px;border-bottom:1px solid var(--border);background:rgba(255,255,255,.02);flex-shrink:0; }
-  .ss-dot { width:8px;height:8px;border-radius:50%; }
-  .ss-content { flex:1; padding:14px; }
-  .ss-title { font-size:.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px; }
-  /* SS 1 - main dashboard */
-  .ss1 { background: linear-gradient(145deg, #0e1524, #111827); }
-  .ss1-row { display:flex;gap:8px;margin-bottom:8px; }
-  .ss1-w { flex:1;background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.2);border-radius:8px;padding:8px 10px; }
-  .ss1-wlabel { font-size:.55rem;color:var(--muted); }
-  .ss1-wval { font-family:var(--font-head);font-weight:700;font-size:.85rem;color:var(--violet2); }
-  .ss1-chart { background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:8px;padding:10px;margin-top:6px; }
-  .ss1-bars { display:flex;align-items:flex-end;gap:4px;height:40px; }
-  .ss1-bar { flex:1;border-radius:3px 3px 0 0;opacity:.8; }
-  /* SS 2 - alarm */
-  .ss2 { background: linear-gradient(145deg, #0c1420, #0f1c2e); }
-  .alarm-big { font-family:var(--font-head);font-weight:800;font-size:1.8rem;color:var(--cyan);letter-spacing:-.04em;margin:6px 0 4px; }
-  .alarm-days { display:flex;gap:5px;margin-bottom:10px; }
-  .alarm-day { width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.58rem;font-weight:600;cursor:pointer; }
-  .alarm-day.active { background:var(--cyan2);color:#fff; }
-  .alarm-day:not(.active) { background:rgba(255,255,255,.05);color:var(--muted); }
-  .alarm-list-item { display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border); }
-  .al-time { font-family:var(--font-head);font-weight:600;font-size:.82rem; }
-  .al-label { font-size:.65rem;color:var(--muted); }
-  .al-tog { margin-left:auto;width:24px;height:14px;border-radius:99px;border:none;cursor:pointer; }
-  /* SS 3 - tasks */
-  .ss3 { background: linear-gradient(145deg, #0d1221, #0f1930); }
-  .task-list-item { display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border); }
-  .tl-cb { width:13px;height:13px;border-radius:4px;border:1.5px solid var(--border2);flex-shrink:0; }
-  .tl-cb.done { background:var(--green);border-color:var(--green);display:flex;align-items:center;justify-content:center; }
-  .tl-text { font-size:.7rem; }
-  .tl-text.done { text-decoration:line-through;color:var(--muted); }
-  .tl-tag { margin-left:auto;font-size:.55rem;padding:2px 7px;border-radius:99px;font-weight:600; }
-  .tl-tag.work { background:rgba(56,217,245,.15);color:var(--cyan);border:1px solid rgba(56,217,245,.2); }
-  .tl-tag.pers { background:rgba(124,58,237,.15);color:var(--violet2);border:1px solid rgba(124,58,237,.2); }
-  /* SS 4 - countdown */
-  .ss4 { background: linear-gradient(145deg, #0f1020, #12102a); }
-  .cd-big { display:flex;gap:6px;align-items:center;margin:8px 0; }
-  .cd-b2 { background:rgba(124,58,237,.2);border:1px solid rgba(124,58,237,.25);border-radius:8px;padding:8px 10px;text-align:center; }
-  .cd-num { font-family:var(--font-head);font-weight:800;font-size:1.2rem;color:var(--violet2); }
-  .cd-lbl { font-size:.55rem;color:var(--muted); }
-  .cd-sep2 { font-family:var(--font-head);font-weight:800;font-size:1rem;color:var(--muted); }
-  /* SS 5 - settings/themes */
-  .ss5 { background: linear-gradient(145deg, #0c1a14, #0f1f18); }
-  .theme-row { display:flex;gap:8px;margin:8px 0; }
-  .theme-swatch { width:30px;height:30px;border-radius:8px;cursor:pointer;border:2px solid transparent;transition:.2s; }
-  .theme-swatch.sel { border-color:#fff; }
-  .ss5-toggle-row { display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border); }
-  .ss5-tlabel { font-size:.68rem;color:var(--muted); }
-  .mini-tog { width:26px;height:15px;border-radius:99px;border:none;cursor:pointer; }
-
-  /* ─── HOW IT WORKS ────────────────────────────────────── */
-  #how { padding: 120px 0; }
-  .steps { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; position:relative; }
-  .steps::before {
-    content:''; position:absolute; top:40px; left:calc(16.666% + 20px); right:calc(16.666% + 20px);
-    height:2px; background:linear-gradient(90deg, var(--violet), var(--cyan2));
-    z-index:0; opacity:.4;
-  }
-  .step {
-    text-align:center; padding:36px 24px 28px; position:relative; z-index:1;
-    background:var(--surface); border:1px solid var(--border); border-radius:var(--r2);
-    backdrop-filter:blur(12px); transition:transform .3s, border-color .3s;
-  }
-  .step:hover { transform:translateY(-4px); border-color:var(--border2); }
-  .step-num {
-    width:56px;height:56px;border-radius:50%;margin:0 auto 20px;
-    display:flex;align-items:center;justify-content:center;
-    font-family:var(--font-head);font-weight:800;font-size:1.1rem;
-    position:relative;
-  }
-  .step-num::before {
-    content:'';position:absolute;inset:0;border-radius:50%;
-    background: linear-gradient(135deg, var(--violet), var(--cyan2)); opacity:.15;
-  }
-  .step-num::after {
-    content:'';position:absolute;inset:-1px;border-radius:50%;
-    border:2px solid transparent;
-    background: linear-gradient(135deg, var(--violet), var(--cyan2)) border-box;
-    -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: destination-out;
-    mask-composite: exclude;
-  }
-  .step-icon { font-size:1.5rem;margin-bottom:6px;display:block; }
-  .step-title { font-family:var(--font-head);font-weight:700;font-size:1.1rem;margin-bottom:8px; }
-  .step-desc { color:var(--muted);font-size:.9rem;line-height:1.6; }
-
-  /* ─── DOWNLOAD ────────────────────────────────────────── */
-  #download { padding:120px 0; }
-  .download-box {
-    background: linear-gradient(135deg, rgba(124,58,237,.12), rgba(56,217,245,.07));
-    border:1px solid rgba(56,217,245,.15); border-radius:var(--r2);
-    padding:72px 40px; text-align:center;
-    position:relative; overflow:hidden;
-    backdrop-filter:blur(12px);
-  }
-  .download-box::before {
-    content:'';position:absolute;inset:0;
-    background: radial-gradient(ellipse 70% 60% at 50% -20%, rgba(124,58,237,.2), transparent 60%);
-  }
-  .download-box > * { position:relative;z-index:1; }
-  .download-title { font-family:var(--font-head);font-weight:800;font-size:clamp(1.8rem,4vw,3rem);letter-spacing:-.04em;margin-bottom:14px; }
-  .download-sub { color:var(--muted);font-size:1.05rem;max-width:420px;margin:0 auto 36px; }
-  .download-meta { display:flex;gap:24px;justify-content:center;margin-top:28px;flex-wrap:wrap; }
-  .download-meta-item { display:flex;align-items:center;gap:6px;color:var(--muted);font-size:.85rem; }
-  .download-meta-item span:first-child { color:var(--green);font-size:1rem; }
-
-  /* ─── FOOTER ────────────────────────────────────────────  */
-  footer {
-    border-top:1px solid var(--border); padding:48px 0 32px;
-    background:var(--bg2);
-  }
-  .footer-inner {
-    display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:20px;
-  }
-  .footer-left { display:flex;flex-direction:column;gap:6px; }
-  .footer-logo { font-family:var(--font-head);font-weight:800;font-size:1rem;letter-spacing:-.02em; }
-  .footer-copy { color:var(--muted);font-size:.8rem; }
-  .footer-links { display:flex;gap:20px;flex-wrap:wrap; }
-  .footer-links a { color:var(--muted);text-decoration:none;font-size:.85rem;transition:color .2s; }
-  .footer-links a:hover { color:var(--text); }
-  .footer-socials { display:flex;gap:12px; }
-  .social-btn {
-    width:36px;height:36px;border-radius:10px;border:1px solid var(--border);
-    background:var(--surface);display:flex;align-items:center;justify-content:center;
-    font-size:.9rem;text-decoration:none;color:var(--muted);
-    transition:border-color .2s, color .2s, transform .2s;
-  }
-  .social-btn:hover { border-color:var(--border2);color:var(--cyan);transform:translateY(-2px); }
-
-  /* ─── SCROLL ANIMATION CLASSES ───────────────────────── */
-  .reveal {
-    opacity:0;transform:translateY(28px);
-    transition:opacity .65s ease, transform .65s ease;
-  }
-  .reveal.visible { opacity:1;transform:translateY(0); }
-  .reveal-l { opacity:0;transform:translateX(-28px); transition:opacity .65s ease,transform .65s ease; }
-  .reveal-r { opacity:0;transform:translateX(28px); transition:opacity .65s ease,transform .65s ease; }
-  .reveal-l.visible, .reveal-r.visible { opacity:1;transform:translateX(0); }
-  .stagger > * { opacity:0;transform:translateY(20px); transition:opacity .5s ease,transform .5s ease; }
-  .stagger.visible > *:nth-child(1) { opacity:1;transform:none;transition-delay:.05s; }
-  .stagger.visible > *:nth-child(2) { opacity:1;transform:none;transition-delay:.15s; }
-  .stagger.visible > *:nth-child(3) { opacity:1;transform:none;transition-delay:.25s; }
-  .stagger.visible > *:nth-child(4) { opacity:1;transform:none;transition-delay:.35s; }
-  .stagger.visible > *:nth-child(5) { opacity:1;transform:none;transition-delay:.45s; }
-  .stagger.visible > *:nth-child(6) { opacity:1;transform:none;transition-delay:.55s; }
-
-  /* ─── ANIMATIONS ──────────────────────────────────────── */
-  @keyframes fadeInUp {
-    from { opacity:0;transform:translateY(28px); }
-    to   { opacity:1;transform:translateY(0); }
-  }
-  @keyframes fadeInRight {
-    from { opacity:0;transform:translateX(32px); }
-    to   { opacity:1;transform:translateX(0); }
+  /* ===== CANVAS WRAPPER ===== */
+  #gameWrapper {
+    position: relative;
+    width: 900px;
+    height: 500px;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 0 60px rgba(80, 200, 255, 0.15);
   }
 
-  /* ─── TICKER ────────────────────────────────────────────  */
-  .ticker-wrap {
-    overflow:hidden; border-top:1px solid var(--border);border-bottom:1px solid var(--border);
-    padding:14px 0; background:rgba(255,255,255,.01); margin-top:60px;
-  }
-  .ticker {
-    display:flex;gap:48px;white-space:nowrap;
-    animation:tickerScroll 22s linear infinite;
-    width:max-content;
-  }
-  .ticker-item {
-    display:flex;align-items:center;gap:8px;
-    font-size:.8rem;color:var(--muted);font-weight:500;
-  }
-  .ticker-item span:first-child { color:var(--cyan); }
-  @keyframes tickerScroll { from{transform:translateX(0)} to{transform:translateX(-50%)} }
-
-  /* ─── RESPONSIVE ────────────────────────────────────────  */
-  @media (max-width: 900px) {
-    .hero-inner { grid-template-columns:1fr; gap:48px; text-align:center; }
-    .hero-sub { max-width:100%; }
-    .hero-actions { justify-content:center; }
-    .hero-visual { order:-1; }
-    .hero-float.f1 { left:-10px;bottom:-10px; }
-    .hero-float.f2 { right:-8px;top:10px; }
-    .features-grid { grid-template-columns:1fr 1fr; }
-    .screenshots-grid { grid-template-columns:1fr 1fr; }
-    .screenshot:nth-child(1) { grid-column:span 2; }
-    .steps { grid-template-columns:1fr; }
-    .steps::before { display:none; }
-    .nav-links { display:none; }
-    .hamburger { display:flex; }
-  }
-  @media (max-width: 560px) {
-    .features-grid { grid-template-columns:1fr; }
-    .screenshots-grid { grid-template-columns:1fr; }
-    .screenshot:nth-child(1) { grid-column:span 1; }
-    .download-box { padding:48px 24px; }
-    .footer-inner { flex-direction:column; align-items:flex-start; }
-    .dash-grid { grid-template-columns:1fr 1fr; }
-    .dash-main { grid-template-columns:1fr; }
+  canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
   }
 
-  /* ─── CURSOR GLOW ───────────────────────────────────────  */
-  .cursor-glow {
-    width:320px;height:320px;border-radius:50%;
-    background:radial-gradient(circle,rgba(124,58,237,.08),transparent 70%);
-    position:fixed;pointer-events:none;z-index:1;
-    transform:translate(-50%,-50%);transition:transform .06s linear;
+  /* ===== HUD OVERLAY ===== */
+  #hud {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    padding: 14px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    pointer-events: none;
+  }
+
+  .hud-panel {
+    background: rgba(10, 10, 30, 0.7);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px;
+    padding: 8px 14px;
+    min-width: 120px;
+  }
+
+  .hud-label {
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.4);
+    margin-bottom: 2px;
+  }
+
+  .hud-value {
+    font-size: 22px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: -0.5px;
+  }
+
+  .hud-value span {
+    font-size: 12px;
+    font-weight: 400;
+    color: rgba(255,255,255,0.5);
+    margin-left: 2px;
+  }
+
+  /* ===== FUEL BAR ===== */
+  #fuelContainer {
+    width: 180px;
+  }
+
+  #fuelBarOuter {
+    background: rgba(255,255,255,0.1);
+    border-radius: 6px;
+    height: 10px;
+    overflow: hidden;
+    margin-top: 6px;
+  }
+
+  #fuelBar {
+    height: 100%;
+    border-radius: 6px;
+    background: linear-gradient(90deg, #f7971e, #ffd200);
+    transition: width 0.2s ease, background 0.3s ease;
+  }
+
+  /* ===== SCORE PANEL ===== */
+  #scorePanel { text-align: right; }
+
+  /* ===== COIN INDICATOR ===== */
+  #coinDisplay {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .coin-icon {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #ffd200, #f7971e);
+    display: inline-block;
+    flex-shrink: 0;
+  }
+
+  /* ===== GAME OVER SCREEN ===== */
+  #gameOver {
+    display: none;
+    position: absolute;
+    inset: 0;
+    background: rgba(5, 5, 20, 0.92);
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    text-align: center;
+    gap: 0;
+  }
+
+  #gameOver.visible { display: flex; }
+
+  .go-title {
+    font-size: 52px;
+    font-weight: 900;
+    color: #fff;
+    letter-spacing: -2px;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+
+  .go-subtitle {
+    font-size: 13px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.35);
+    margin-bottom: 36px;
+  }
+
+  .go-stats {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 40px;
+  }
+
+  .go-stat {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding: 16px 28px;
+  }
+
+  .go-stat-label {
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.35);
+    margin-bottom: 6px;
+  }
+
+  .go-stat-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: #fff;
+  }
+
+  .go-stat-value.gold { color: #ffd200; }
+
+  #restartBtn {
+    background: linear-gradient(135deg, #4facfe, #00f2fe);
+    border: none;
+    border-radius: 50px;
+    padding: 14px 48px;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: #0a0a1a;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: transform 0.15s ease, opacity 0.15s ease;
+  }
+
+  #restartBtn:hover { transform: scale(1.05); opacity: 0.9; }
+  #restartBtn:active { transform: scale(0.97); }
+
+  .go-hint {
+    margin-top: 14px;
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    color: rgba(255,255,255,0.2);
+    text-transform: uppercase;
+  }
+
+  /* ===== CONTROLS HINT ===== */
+  #controlsHint {
+    position: absolute;
+    bottom: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 16px;
+    pointer-events: none;
+    opacity: 0.45;
+  }
+
+  .ctrl-key {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 11px;
+    color: #fff;
+    letter-spacing: 0.5px;
+  }
+
+  /* ===== SPEED INDICATOR ===== */
+  #speedometer {
+    position: absolute;
+    bottom: 14px;
+    right: 20px;
+    pointer-events: none;
   }
 </style>
 </head>
 <body>
 
-<!-- cursor glow -->
-<div class="cursor-glow" id="cursorGlow"></div>
+<div id="gameWrapper">
+  <!-- Main Game Canvas -->
+  <canvas id="gameCanvas" width="900" height="500"></canvas>
 
-<!-- ambient blobs -->
-<div class="blob blob-1"></div>
-<div class="blob blob-2"></div>
-<div class="blob blob-3"></div>
-
-<!-- ── NAVBAR ─────────────────────────── -->
-<nav id="navbar">
-  <div class="nav-inner">
-    <a href="#" class="nav-logo">
-      <div class="nav-logo-icon">⏱</div>
-      NeuroDesk
-    </a>
-    <div class="nav-links">
-      <a href="#features">Features</a>
-      <a href="#preview">Preview</a>
-      <a href="#how">How It Works</a>
-      <a href="#download" class="nav-cta">Download</a>
+  <!-- HUD (Heads-Up Display) -->
+  <div id="hud">
+    <!-- Fuel Bar -->
+    <div class="hud-panel" id="fuelContainer">
+      <div class="hud-label">Fuel</div>
+      <div id="fuelBarOuter">
+        <div id="fuelBar" style="width:100%"></div>
+      </div>
     </div>
-    <div class="hamburger" id="hamburgerBtn">
-      <span></span><span></span><span></span>
+
+    <!-- Distance Score -->
+    <div class="hud-panel" style="text-align:center;">
+      <div class="hud-label">Distance</div>
+      <div class="hud-value" id="distDisplay">0 <span>m</span></div>
+    </div>
+
+    <!-- Coins -->
+    <div class="hud-panel" id="scorePanel">
+      <div class="hud-label">Coins</div>
+      <div class="hud-value" id="coinDisplay">
+        <span class="coin-icon"></span>
+        <span id="coinCount">0</span>
+      </div>
     </div>
   </div>
-</nav>
 
-<!-- mobile menu -->
-<div class="mobile-menu" id="mobileMenu">
-  <span class="mobile-close" id="mobileClose">✕</span>
-  <a href="#features" onclick="closeMobile()">Features</a>
-  <a href="#preview"  onclick="closeMobile()">Preview</a>
-  <a href="#how"      onclick="closeMobile()">How It Works</a>
-  <a href="#download" onclick="closeMobile()" style="color:var(--cyan)">Download</a>
+  <!-- Game Over Overlay -->
+  <div id="gameOver">
+    <div class="go-title">GAME OVER</div>
+    <div class="go-subtitle">You ran out of fuel</div>
+    <div class="go-stats">
+      <div class="go-stat">
+        <div class="go-stat-label">Distance</div>
+        <div class="go-stat-value" id="finalDist">0 m</div>
+      </div>
+      <div class="go-stat">
+        <div class="go-stat-label">Coins</div>
+        <div class="go-stat-value gold" id="finalCoins">0</div>
+      </div>
+    </div>
+    <button id="restartBtn" onclick="restartGame()">Play Again</button>
+    <div class="go-hint">or press Space</div>
+  </div>
+
+  <!-- Controls Hint -->
+  <div id="controlsHint">
+    <div class="ctrl-key">← Reverse</div>
+    <div class="ctrl-key">→ Accelerate</div>
+    <div class="ctrl-key">Space Restart</div>
+  </div>
 </div>
 
-<!-- ── HERO ───────────────────────────── -->
-<section id="hero">
-  <div class="container">
-    <div class="hero-inner">
-      <!-- text -->
-      <div class="hero-text">
-        <div class="hero-badge"><span></span> Now Available — v2.4.1</div>
-        <h1 class="hero-title">
-          Control Your<br>
-          <span class="grad">Time, Tasks &amp;<br>Alarms</span>
-        </h1>
-        <p class="hero-sub">
-          Control your time, tasks, and alarms from one powerful dashboard — built for focus, designed for clarity.
-        </p>
-        <div class="hero-actions">
-          <a href="#download" class="btn-primary" id="heroDownloadBtn">
-            ⬇ Download App
-          </a>
-          <a href="#preview" class="btn-secondary">
-            👁 View Screenshots
-          </a>
-        </div>
-      </div>
-
-      <!-- mockup -->
-      <div class="hero-visual">
-        <div class="mockup-wrap">
-          <div class="mockup-bar">
-            <div class="mockup-dot"></div>
-            <div class="mockup-dot"></div>
-            <div class="mockup-dot"></div>
-            <div class="mockup-title-bar">NeuroDesk Scheduler — Dashboard</div>
-          </div>
-          <div class="mockup-body">
-            <div class="dash-grid">
-              <div class="dash-card c1">
-                <div class="dash-card-label">Active Tasks</div>
-                <div class="dash-card-val" id="liveTask">8</div>
-                <div class="dash-card-sub">3 due today</div>
-              </div>
-              <div class="dash-card c2">
-                <div class="dash-card-label">Next Alarm</div>
-                <div class="dash-card-val" id="liveAlarm">07:30</div>
-                <div class="dash-card-sub">Morning stand-up</div>
-              </div>
-              <div class="dash-card c3">
-                <div class="dash-card-label">Timers</div>
-                <div class="dash-card-val">2</div>
-                <div class="dash-card-sub">Running now</div>
-              </div>
-            </div>
-            <div class="dash-main">
-              <div class="dash-tasks">
-                <div class="dash-tasks-title">Upcoming Tasks</div>
-                <div class="task-row">
-                  <div class="task-dot" style="background:var(--cyan)"></div>
-                  <div class="task-text" style="font-size:.72rem">Design review meeting</div>
-                  <div class="task-time">09:00</div>
-                </div>
-                <div class="task-row">
-                  <div class="task-dot" style="background:var(--violet2)"></div>
-                  <div class="task-text" style="font-size:.72rem">Submit weekly report</div>
-                  <div class="task-time">12:00</div>
-                </div>
-                <div class="task-row">
-                  <div class="task-dot" style="background:var(--green)"></div>
-                  <div class="task-text" style="font-size:.72rem">Code review – PR #42</div>
-                  <div class="task-time">15:30</div>
-                </div>
-                <div class="task-row">
-                  <div class="task-dot" style="background:var(--orange)"></div>
-                  <div class="task-text" style="font-size:.72rem">Client call – Acme Co.</div>
-                  <div class="task-time">17:00</div>
-                </div>
-              </div>
-              <div>
-                <div class="dash-alarm">
-                  <div class="dash-alarm-title">Alarms</div>
-                  <div class="alarm-item">
-                    <div>
-                      <div class="alarm-time-big">07:30</div>
-                      <div class="alarm-label">Morning</div>
-                    </div>
-                    <button class="alarm-toggle on"></button>
-                  </div>
-                  <div class="alarm-item">
-                    <div>
-                      <div class="alarm-time-big" style="color:var(--muted);font-size:.9rem">22:00</div>
-                      <div class="alarm-label">Wind-down</div>
-                    </div>
-                    <button class="alarm-toggle off"></button>
-                  </div>
-                </div>
-                <div class="countdown-bar">
-                  <div class="countdown-title">Countdown</div>
-                  <div class="countdown-digits">
-                    <div class="cd-block" id="cdH">00</div>
-                    <div class="cd-sep">:</div>
-                    <div class="cd-block" id="cdM">25</div>
-                    <div class="cd-sep">:</div>
-                    <div class="cd-block" id="cdS">00</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <!-- floating badges -->
-        <div class="hero-float f1">
-          <span class="float-icon">✅</span>
-          <div class="float-text">
-            <b>Task Done</b>
-            "Submit report" checked
-          </div>
-        </div>
-        <div class="hero-float f2">
-          <span class="float-icon">⏰</span>
-          <div class="float-text">
-            <b>Alarm Triggered</b>
-            07:30 · Morning
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ticker -->
-    <div class="ticker-wrap">
-      <div class="ticker" id="ticker">
-        <div class="ticker-item"><span>⚡</span> Alarm System</div>
-        <div class="ticker-item"><span>📋</span> Task Scheduler</div>
-        <div class="ticker-item"><span>⏳</span> Countdown Timers</div>
-        <div class="ticker-item"><span>🎨</span> Custom Themes</div>
-        <div class="ticker-item"><span>📴</span> Offline Usage</div>
-        <div class="ticker-item"><span>🖥</span> Clean Dashboard</div>
-        <div class="ticker-item"><span>⚡</span> Alarm System</div>
-        <div class="ticker-item"><span>📋</span> Task Scheduler</div>
-        <div class="ticker-item"><span>⏳</span> Countdown Timers</div>
-        <div class="ticker-item"><span>🎨</span> Custom Themes</div>
-        <div class="ticker-item"><span>📴</span> Offline Usage</div>
-        <div class="ticker-item"><span>🖥</span> Clean Dashboard</div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ── FEATURES ───────────────────────── -->
-<section id="features">
-  <div class="container">
-    <div class="section-header reveal">
-      <div class="section-eyebrow">Features</div>
-      <h2 class="section-title">Everything you need,<br>nothing you don't</h2>
-      <p class="section-sub">A focused toolkit built around how you actually work — not how software companies think you do.</p>
-    </div>
-    <div class="features-grid stagger">
-      <div class="feat-card">
-        <div class="feat-icon cy">⏰</div>
-        <div class="feat-name">Smart Alarm System</div>
-        <div class="feat-desc">Set precise alarms with custom labels, snooze intervals, and recurring schedules. Never miss what matters.</div>
-      </div>
-      <div class="feat-card">
-        <div class="feat-icon vi">📋</div>
-        <div class="feat-name">Task Scheduler</div>
-        <div class="feat-desc">Organize tasks by time, priority, and category. Drag-to-reorder and inline editing make management effortless.</div>
-      </div>
-      <div class="feat-card">
-        <div class="feat-icon or">⏳</div>
-        <div class="feat-name">Countdown Timers</div>
-        <div class="feat-desc">Run multiple simultaneous countdown timers with visual progress bars and audio cues when time is up.</div>
-      </div>
-      <div class="feat-card">
-        <div class="feat-icon gr">🎨</div>
-        <div class="feat-name">Custom Color Themes</div>
-        <div class="feat-desc">Choose from 12 curated color schemes or build your own. Your workspace, your palette.</div>
-      </div>
-      <div class="feat-card">
-        <div class="feat-icon bl">📴</div>
-        <div class="feat-name">Fully Offline</div>
-        <div class="feat-desc">No internet required. All your data stays local — fast, private, and always accessible even without a connection.</div>
-      </div>
-      <div class="feat-card">
-        <div class="feat-icon re">🖥</div>
-        <div class="feat-name">Clean Dashboard</div>
-        <div class="feat-desc">An at-a-glance overview of your alarms, tasks, and timers — organized, readable, and distraction-free.</div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ── SCREENSHOTS ────────────────────── -->
-<section id="preview">
-  <div class="container">
-    <div class="section-header reveal">
-      <div class="section-eyebrow">App Preview</div>
-      <h2 class="section-title">Designed for clarity<br>&amp; focus</h2>
-      <p class="section-sub">Every screen built to reduce friction and keep you moving.</p>
-    </div>
-    <div class="screenshots-grid stagger">
-
-      <!-- SS 1: main dashboard (spans 2 cols) -->
-      <div class="screenshot">
-        <div class="ss-inner ss1">
-          <div class="ss-bar">
-            <div class="ss-dot" style="background:#f87171"></div>
-            <div class="ss-dot" style="background:#fbbf24"></div>
-            <div class="ss-dot" style="background:#34d399"></div>
-            <span style="font-size:.65rem;color:var(--muted);margin-left:8px">Main Dashboard</span>
-          </div>
-          <div class="ss-content">
-            <div class="ss-title">Overview</div>
-            <div class="ss1-row">
-              <div class="ss1-w"><div class="ss1-wlabel">Tasks</div><div class="ss1-wval" style="color:var(--violet2)">8 Active</div></div>
-              <div class="ss1-w"><div class="ss1-wlabel">Next Alarm</div><div class="ss1-wval" style="color:var(--cyan)">07:30</div></div>
-              <div class="ss1-w"><div class="ss1-wlabel">Timers</div><div class="ss1-wval" style="color:var(--orange)">2 Running</div></div>
-            </div>
-            <div class="ss1-chart">
-              <div style="font-size:.6rem;color:var(--muted);margin-bottom:6px">Task Completion · This Week</div>
-              <div class="ss1-bars">
-                <div class="ss1-bar" style="height:55%;background:var(--violet)"></div>
-                <div class="ss1-bar" style="height:70%;background:var(--violet)"></div>
-                <div class="ss1-bar" style="height:40%;background:var(--violet)"></div>
-                <div class="ss1-bar" style="height:85%;background:var(--cyan2)"></div>
-                <div class="ss1-bar" style="height:60%;background:var(--violet)"></div>
-                <div class="ss1-bar" style="height:95%;background:linear-gradient(to top,var(--violet),var(--cyan))"></div>
-                <div class="ss1-bar" style="height:50%;background:var(--violet);opacity:.5"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- SS 2: alarm -->
-      <div class="screenshot">
-        <div class="ss-inner ss2">
-          <div class="ss-bar">
-            <div class="ss-dot" style="background:#f87171"></div>
-            <div class="ss-dot" style="background:#fbbf24"></div>
-            <div class="ss-dot" style="background:#34d399"></div>
-            <span style="font-size:.65rem;color:var(--muted);margin-left:8px">Alarms</span>
-          </div>
-          <div class="ss-content">
-            <div class="alarm-big">07:30</div>
-            <div class="alarm-days">
-              <div class="alarm-day">S</div>
-              <div class="alarm-day active">M</div>
-              <div class="alarm-day active">T</div>
-              <div class="alarm-day active">W</div>
-              <div class="alarm-day active">T</div>
-              <div class="alarm-day active">F</div>
-              <div class="alarm-day">S</div>
-            </div>
-            <div class="alarm-list-item">
-              <div><div class="al-time" style="color:var(--cyan)">07:30</div><div class="al-label">Morning Stand-up</div></div>
-              <button class="al-tog" style="background:var(--cyan2)"></button>
-            </div>
-            <div class="alarm-list-item">
-              <div><div class="al-time">13:00</div><div class="al-label">Lunch Break</div></div>
-              <button class="al-tog" style="background:rgba(255,255,255,.1)"></button>
-            </div>
-            <div class="alarm-list-item">
-              <div><div class="al-time" style="color:var(--violet2)">22:00</div><div class="al-label">Wind-down</div></div>
-              <button class="al-tog" style="background:var(--violet)"></button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- SS 3: tasks -->
-      <div class="screenshot">
-        <div class="ss-inner ss3">
-          <div class="ss-bar">
-            <div class="ss-dot" style="background:#f87171"></div>
-            <div class="ss-dot" style="background:#fbbf24"></div>
-            <div class="ss-dot" style="background:#34d399"></div>
-            <span style="font-size:.65rem;color:var(--muted);margin-left:8px">Task List</span>
-          </div>
-          <div class="ss-content">
-            <div class="ss-title">Today — March 15</div>
-            <div class="task-list-item">
-              <div class="tl-cb done">✓</div>
-              <span class="tl-text done">Morning journal</span>
-              <span class="tl-tag pers">Personal</span>
-            </div>
-            <div class="task-list-item">
-              <div class="tl-cb done">✓</div>
-              <span class="tl-text done">Team standup</span>
-              <span class="tl-tag work">Work</span>
-            </div>
-            <div class="task-list-item">
-              <div class="tl-cb"></div>
-              <span class="tl-text">Design review</span>
-              <span class="tl-tag work">Work</span>
-            </div>
-            <div class="task-list-item">
-              <div class="tl-cb"></div>
-              <span class="tl-text">Submit report</span>
-              <span class="tl-tag work">Work</span>
-            </div>
-            <div class="task-list-item">
-              <div class="tl-cb"></div>
-              <span class="tl-text">Evening run</span>
-              <span class="tl-tag pers">Personal</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- SS 4: countdown -->
-      <div class="screenshot">
-        <div class="ss-inner ss4">
-          <div class="ss-bar">
-            <div class="ss-dot" style="background:#f87171"></div>
-            <div class="ss-dot" style="background:#fbbf24"></div>
-            <div class="ss-dot" style="background:#34d399"></div>
-            <span style="font-size:.65rem;color:var(--muted);margin-left:8px">Countdown</span>
-          </div>
-          <div class="ss-content">
-            <div class="ss-title">Active Timers</div>
-            <div style="margin-bottom:10px;">
-              <div style="font-size:.65rem;color:var(--muted);margin-bottom:4px">Pomodoro Focus</div>
-              <div class="cd-big">
-                <div class="cd-b2"><div class="cd-num">00</div><div class="cd-lbl">HRS</div></div>
-                <div class="cd-sep2">:</div>
-                <div class="cd-b2"><div class="cd-num">24</div><div class="cd-lbl">MIN</div></div>
-                <div class="cd-sep2">:</div>
-                <div class="cd-b2"><div class="cd-num">51</div><div class="cd-lbl">SEC</div></div>
-              </div>
-              <div style="height:4px;border-radius:99px;background:rgba(255,255,255,.08);margin-top:5px;">
-                <div style="width:55%;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--violet),var(--cyan2))"></div>
-              </div>
-            </div>
-            <div>
-              <div style="font-size:.65rem;color:var(--muted);margin-bottom:4px">Break Timer</div>
-              <div class="cd-big">
-                <div class="cd-b2" style="background:rgba(34,211,160,.15);border-color:rgba(34,211,160,.2)"><div class="cd-num" style="color:var(--green)">00</div><div class="cd-lbl">HRS</div></div>
-                <div class="cd-sep2">:</div>
-                <div class="cd-b2" style="background:rgba(34,211,160,.15);border-color:rgba(34,211,160,.2)"><div class="cd-num" style="color:var(--green)">05</div><div class="cd-lbl">MIN</div></div>
-                <div class="cd-sep2">:</div>
-                <div class="cd-b2" style="background:rgba(34,211,160,.15);border-color:rgba(34,211,160,.2)"><div class="cd-num" style="color:var(--green)">00</div><div class="cd-lbl">SEC</div></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- SS 5: settings -->
-      <div class="screenshot">
-        <div class="ss-inner ss5">
-          <div class="ss-bar">
-            <div class="ss-dot" style="background:#f87171"></div>
-            <div class="ss-dot" style="background:#fbbf24"></div>
-            <div class="ss-dot" style="background:#34d399"></div>
-            <span style="font-size:.65rem;color:var(--muted);margin-left:8px">Themes &amp; Settings</span>
-          </div>
-          <div class="ss-content">
-            <div class="ss-title">Color Theme</div>
-            <div class="theme-row">
-              <div class="theme-swatch" style="background:linear-gradient(135deg,#7c3aed,#38d9f5)"></div>
-              <div class="theme-swatch sel" style="background:linear-gradient(135deg,#0ea5e9,#22d3a0)"></div>
-              <div class="theme-swatch" style="background:linear-gradient(135deg,#f97316,#f59e0b)"></div>
-              <div class="theme-swatch" style="background:linear-gradient(135deg,#ec4899,#f87171)"></div>
-              <div class="theme-swatch" style="background:linear-gradient(135deg,#a78bfa,#818cf8)"></div>
-            </div>
-            <div style="height:1px;background:var(--border);margin:8px 0;"></div>
-            <div class="ss5-toggle-row">
-              <span class="ss5-tlabel">Sound Alerts</span>
-              <button class="mini-tog" style="background:var(--cyan2)"></button>
-            </div>
-            <div class="ss5-toggle-row">
-              <span class="ss5-tlabel">Desktop Notifications</span>
-              <button class="mini-tog" style="background:var(--violet)"></button>
-            </div>
-            <div class="ss5-toggle-row">
-              <span class="ss5-tlabel">Auto-start on Login</span>
-              <button class="mini-tog" style="background:rgba(255,255,255,.1)"></button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-    </div>
-  </div>
-</section>
-
-<!-- ── HOW IT WORKS ───────────────────── -->
-<section id="how">
-  <div class="container">
-    <div class="section-header reveal">
-      <div class="section-eyebrow">Setup</div>
-      <h2 class="section-title">Up and running<br>in 60 seconds</h2>
-      <p class="section-sub">No installer, no account, no nonsense. Just download and go.</p>
-    </div>
-    <div class="steps stagger">
-      <div class="step">
-        <div class="step-num">
-          <span class="step-icon">⬇</span>
-        </div>
-        <div class="step-title">Download the App</div>
-        <div class="step-desc">Click the download button to grab the latest version of NeuroDesk Scheduler as a ZIP archive.</div>
-      </div>
-      <div class="step">
-        <div class="step-num">
-          <span class="step-icon">📂</span>
-        </div>
-        <div class="step-title">Extract the Files</div>
-        <div class="step-desc">Unzip the archive to any folder on your PC. No installation wizard required — it's fully portable.</div>
-      </div>
-      <div class="step">
-        <div class="step-num">
-          <span class="step-icon">🚀</span>
-        </div>
-        <div class="step-title">Run the Scheduler</div>
-        <div class="step-desc">Double-click <code style="color:var(--cyan);background:rgba(56,217,245,.08);padding:1px 6px;border-radius:4px">NeuroDesk.exe</code> and your dashboard opens instantly.</div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ── DOWNLOAD ───────────────────────── -->
-<section id="download">
-  <div class="container">
-    <div class="download-box reveal">
-      <div class="section-eyebrow" style="margin-bottom:16px">Download</div>
-      <h2 class="download-title">Ready to reclaim<br>your day?</h2>
-      <p class="download-sub">Free. Offline. No account needed. Works on Windows 10 &amp; 11.</p>
-      <a href="#" class="btn-primary" id="downloadBtn" style="font-size:1.05rem;padding:16px 44px;">
-        ⬇ &nbsp;Download Scheduler App
-      </a>
-      <div class="download-meta">
-        <div class="download-meta-item"><span>✓</span> Version 2.4.1</div>
-        <div class="download-meta-item"><span>✓</span> Windows 10 / 11</div>
-        <div class="download-meta-item"><span>✓</span> 4.2 MB</div>
-        <div class="download-meta-item"><span>✓</span> No install required</div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ── FOOTER ─────────────────────────── -->
-<footer>
-  <div class="container">
-    <div class="footer-inner">
-      <div class="footer-left">
-        <div class="footer-logo">⏱ NeuroDesk Scheduler</div>
-        <div class="footer-copy">© 2026 NeuroDesk. All rights reserved.</div>
-      </div>
-      <div class="footer-links">
-        <a href="#">Privacy</a>
-        <a href="#">Terms</a>
-        <a href="#">Changelog</a>
-        <a href="#">Support</a>
-      </div>
-      <div class="footer-socials">
-        <a href="#" class="social-btn">𝕏</a>
-        <a href="#" class="social-btn">GH</a>
-        <a href="#" class="social-btn">in</a>
-      </div>
-    </div>
-  </div>
-</footer>
-
-<!-- ── SCRIPTS ────────────────────────── -->
 <script>
-/* ── navbar scroll ── */
-const navbar = document.getElementById('navbar');
-window.addEventListener('scroll', () => {
-  navbar.classList.toggle('scrolled', window.scrollY > 20);
-});
+// =============================================================
+//  HILL CLIMB RACER — Complete Game Engine
+//  Single-file HTML5 Canvas game, no external dependencies
+// =============================================================
 
-/* ── mobile menu ── */
-const hamburgerBtn = document.getElementById('hamburgerBtn');
-const mobileMenu   = document.getElementById('mobileMenu');
-const mobileClose  = document.getElementById('mobileClose');
-hamburgerBtn.addEventListener('click', () => mobileMenu.classList.toggle('open'));
-mobileClose.addEventListener('click', () => mobileMenu.classList.remove('open'));
-function closeMobile() { mobileMenu.classList.remove('open'); }
+// ---- Canvas Setup ----
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
 
-/* ── cursor glow ── */
-const cursorGlow = document.getElementById('cursorGlow');
-document.addEventListener('mousemove', e => {
-  cursorGlow.style.left = e.clientX + 'px';
-  cursorGlow.style.top  = e.clientY + 'px';
-});
+const W = canvas.width;   // 900
+const H = canvas.height;  // 500
 
-/* ── feat card mouse tracking ── */
-document.querySelectorAll('.feat-card').forEach(card => {
-  card.addEventListener('mousemove', e => {
-    const r = card.getBoundingClientRect();
-    card.style.setProperty('--mx', ((e.clientX - r.left) / r.width * 100) + '%');
-    card.style.setProperty('--my', ((e.clientY - r.top)  / r.height * 100) + '%');
-  });
-});
+// ---- HUD Elements ----
+const fuelBar    = document.getElementById('fuelBar');
+const distDisplay = document.getElementById('distDisplay');
+const coinCount  = document.getElementById('coinCount');
+const gameOverEl = document.getElementById('gameOver');
+const finalDist  = document.getElementById('finalDist');
+const finalCoins = document.getElementById('finalCoins');
 
-/* ── scroll reveal ── */
-const revealEls = document.querySelectorAll('.reveal, .reveal-l, .reveal-r, .stagger');
-const obs = new IntersectionObserver(entries => {
-  entries.forEach(e => {
-    if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); }
-  });
-}, { threshold: 0.12 });
-revealEls.forEach(el => obs.observe(el));
+// =============================================================
+//  TERRAIN GENERATION
+//  Uses midpoint displacement + smoothing for natural hills
+// =============================================================
 
-/* ── live countdown in hero mockup ── */
-let sec = 25 * 60;
-setInterval(() => {
-  if (sec > 0) sec--;
-  const h = Math.floor(sec / 3600);
-  const m = Math.floor((sec % 3600) / 60);
-  const s = sec % 60;
-  document.getElementById('cdH').textContent = String(h).padStart(2,'0');
-  document.getElementById('cdM').textContent = String(m).padStart(2,'0');
-  document.getElementById('cdS').textContent = String(s).padStart(2,'0');
-}, 1000);
+const TERRAIN_SEGMENT = 6;   // pixels per terrain point (smaller = smoother)
+const TERRAIN_POINTS  = 600; // total terrain points to generate ahead
 
-/* ── live clock in alarm card ── */
-setInterval(() => {
-  const now = new Date();
-  const h = String(now.getHours()).padStart(2,'0');
-  const m = String(now.getMinutes()).padStart(2,'0');
-  document.getElementById('liveAlarm').textContent = h + ':' + m;
-}, 5000);
+/**
+ * Generate terrain Y-values using layered sine waves + noise.
+ * Returns array of Y positions for each segment index.
+ */
+function generateTerrain(startX, count) {
+  const points = [];
+  for (let i = 0; i < count; i++) {
+    const x = (startX + i) * TERRAIN_SEGMENT;
 
-/* ── real ZIP builder ── */
-function buildZip(files) {
-  // files: [{name, content(string)}]
-  const encoder = new TextEncoder();
-  const localHeaders = [];
-  const centralDir   = [];
-  let offset = 0;
+    // Layer multiple sine waves for organic hills
+    let y = H * 0.55;
+    y += Math.sin(x * 0.008) * 60;          // long rolling hills
+    y += Math.sin(x * 0.022 + 1.5) * 35;   // medium bumps
+    y += Math.sin(x * 0.055 + 0.8) * 18;   // small texture
+    y += Math.sin(x * 0.13  + 2.1) * 8;    // micro bumps
+    y += (Math.random() - 0.5) * 5;         // tiny noise
 
-  function u32(n){ const b=new Uint8Array(4); new DataView(b.buffer).setUint32(0,n,true); return b; }
-  function u16(n){ const b=new Uint8Array(2); new DataView(b.buffer).setUint16(0,n,true); return b; }
-
-  function crc32(data){
-    let crc=0xFFFFFFFF;
-    const table=crc32.table||(()=>{
-      const t=new Uint32Array(256);
-      for(let i=0;i<256;i++){let c=i;for(let j=0;j<8;j++)c=c&1?(0xEDB88320^(c>>>1)):(c>>>1);t[i]=c;}
-      return crc32.table=t;
-    })();
-    for(let i=0;i<data.length;i++) crc=table[(crc^data[i])&0xFF]^(crc>>>8);
-    return (crc^0xFFFFFFFF)>>>0;
+    // Clamp so ground stays visible but hills are fun
+    y = Math.max(H * 0.35, Math.min(H * 0.78, y));
+    points.push(y);
   }
 
-  const parts = [];
+  // Smooth pass — average neighbours to remove sharp spikes
+  for (let pass = 0; pass < 3; pass++) {
+    for (let i = 1; i < points.length - 1; i++) {
+      points[i] = (points[i - 1] + points[i] * 2 + points[i + 1]) / 4;
+    }
+  }
+  return points;
+}
 
-  for(const file of files){
-    const nameBytes    = encoder.encode(file.name);
-    const contentBytes = encoder.encode(file.content);
-    const crc          = crc32(contentBytes);
-    const dosDate      = 0x5690; // 2026-03-15 approx
-    const dosTime      = 0x0000;
+// =============================================================
+//  PHYSICS CONSTANTS
+// =============================================================
 
-    // Local file header
-    const localHeader = new Uint8Array([
-      0x50,0x4B,0x03,0x04,       // signature
-      0x14,0x00,                  // version needed (2.0)
-      0x00,0x00,                  // flags
-      0x00,0x00,                  // compression (stored)
-      ...u16(dosTime),
-      ...u16(dosDate),
-      ...u32(crc),
-      ...u32(contentBytes.length),// compressed size
-      ...u32(contentBytes.length),// uncompressed size
-      ...u16(nameBytes.length),
-      0x00,0x00,                  // extra field length
-      ...nameBytes,
-    ]);
+const GRAVITY        = 0.45;   // downward acceleration
+const ENGINE_POWER   = 0.38;   // forward force when accelerating
+const BRAKE_POWER    = 0.22;   // braking/reverse force
+const MAX_SPEED      = 9.5;    // max horizontal velocity
+const FRICTION       = 0.97;   // ground friction multiplier
+const AIR_FRICTION   = 0.995;  // air drag
+const WHEEL_RADIUS   = 14;     // visual wheel size
+const CAR_W          = 72;     // car body width
+const CAR_H          = 28;     // car body height
+const SUSPENSION_K   = 0.18;   // spring stiffness
+const DAMPING        = 0.55;   // suspension damping
+const FUEL_DRAIN     = 0.025;  // fuel drain per frame while driving
 
-    // Central directory header
-    const cdHeader = new Uint8Array([
-      0x50,0x4B,0x01,0x02,       // signature
-      0x14,0x00,                  // version made by
-      0x14,0x00,                  // version needed
-      0x00,0x00,                  // flags
-      0x00,0x00,                  // compression (stored)
-      ...u16(dosTime),
-      ...u16(dosDate),
-      ...u32(crc),
-      ...u32(contentBytes.length),
-      ...u32(contentBytes.length),
-      ...u16(nameBytes.length),
-      0x00,0x00,                  // extra field length
-      0x00,0x00,                  // file comment length
-      0x00,0x00,                  // disk number start
-      0x00,0x00,                  // internal attr
-      0x00,0x00,0x00,0x00,        // external attr
-      ...u32(offset),             // relative offset of local header
-      ...nameBytes,
-    ]);
+// =============================================================
+//  COIN SYSTEM
+// =============================================================
 
-    localHeaders.push(localHeader, contentBytes);
-    centralDir.push(cdHeader);
-    offset += localHeader.length + contentBytes.length;
+const COIN_RADIUS  = 11;
+const COIN_SPACING = 240; // pixels between coins on average
+
+// =============================================================
+//  GAME STATE
+// =============================================================
+
+let game; // main game state object
+
+/**
+ * Build a fresh game state — call this to start or restart.
+ */
+function createGameState() {
+  // Generate initial terrain
+  const terrain = generateTerrain(0, TERRAIN_POINTS);
+
+  // Find a flat-ish starting Y for the car
+  const startY = terrain[10] - WHEEL_RADIUS * 2 - CAR_H;
+
+  return {
+    // ---- Scrolling ----
+    cameraX: 0,         // how far the world has scrolled (pixels)
+    terrainOffset: 0,   // which terrain segment is the leftmost visible
+
+    // ---- Terrain ----
+    terrain,            // array of Y values per segment
+    terrainGenIndex: TERRAIN_POINTS, // where to generate next
+
+    // ---- Car physics ----
+    car: {
+      x: 180,           // screen X (stays roughly here; world scrolls)
+      y: startY,        // world Y position of car center
+      vx: 0,            // horizontal velocity
+      vy: 0,            // vertical velocity
+      angle: 0,         // rotation in radians
+      angularVel: 0,    // rotation speed
+
+      // Suspension for each wheel (front/rear offset)
+      susp: [
+        { offset: 0, vel: 0 }, // rear wheel
+        { offset: 0, vel: 0 }, // front wheel
+      ],
+
+      onGround: false,  // is car touching terrain?
+      flipped: false,   // is car upside-down (game over condition)
+    },
+
+    // ---- Controls ----
+    keys: {
+      right: false,
+      left: false,
+    },
+
+    // ---- Fuel ----
+    fuel: 100,          // 0-100
+
+    // ---- Score ----
+    distance: 0,        // meters driven forward
+    coins: 0,           // coins collected
+
+    // ---- Coin objects ----
+    coinList: [],       // { wx, wy, collected }
+
+    // ---- State flags ----
+    running: true,
+    frameId: null,
+
+    // ---- Visual ----
+    particles: [],      // exhaust particles
+    groundShakeTimer: 0,
+  };
+}
+
+// =============================================================
+//  TERRAIN HELPERS
+// =============================================================
+
+/**
+ * Get terrain Y at a given world X pixel.
+ * Interpolates between two terrain points for smoothness.
+ */
+function getTerrainY(g, worldX) {
+  const idx = worldX / TERRAIN_SEGMENT - g.terrainOffset;
+  const i   = Math.floor(idx);
+  const t   = idx - i;
+
+  if (i < 0) return H * 0.6;
+  if (i >= g.terrain.length - 1) return g.terrain[g.terrain.length - 1];
+
+  // Linear interpolation between adjacent points
+  return g.terrain[i] * (1 - t) + g.terrain[i + 1] * t;
+}
+
+/**
+ * Get terrain slope (angle) at a world X position.
+ * Uses finite difference on terrain points.
+ */
+function getTerrainAngle(g, worldX) {
+  const y1 = getTerrainY(g, worldX - 4);
+  const y2 = getTerrainY(g, worldX + 4);
+  return Math.atan2(y2 - y1, 8);
+}
+
+/**
+ * Extend terrain when the car approaches the end of generated points.
+ */
+function extendTerrain(g) {
+  const newPoints = generateTerrain(g.terrainGenIndex, 200);
+  g.terrain.push(...newPoints);
+  g.terrainGenIndex += 200;
+}
+
+// =============================================================
+//  COIN GENERATION
+// =============================================================
+
+/**
+ * Spawn coins ahead of the current camera position.
+ */
+function spawnCoins(g) {
+  // World X of the rightmost coin
+  const lastCoin = g.coinList.length > 0
+    ? g.coinList[g.coinList.length - 1].wx
+    : g.cameraX;
+
+  // Spawn until we have coins ~1500px ahead
+  while (lastCoin < g.cameraX + W + 1500 || g.coinList.length === 0) {
+    const nextX = (g.coinList.length === 0 ? g.cameraX + 600 : g.coinList[g.coinList.length - 1].wx)
+                  + COIN_SPACING + Math.random() * 160;
+    const groundY = getTerrainY(g, nextX);
+    g.coinList.push({
+      wx: nextX,
+      wy: groundY - 40 - Math.random() * 30,  // float above ground
+      collected: false,
+      bobPhase: Math.random() * Math.PI * 2,  // random bob offset
+    });
+  }
+}
+
+// =============================================================
+//  PHYSICS UPDATE
+// =============================================================
+
+/**
+ * Main physics step — called every frame.
+ * Updates car position, velocity, rotation, suspension, collision.
+ */
+function updatePhysics(g, dt) {
+  const car = g.car;
+
+  // ---- Engine / Braking Input ----
+  let engineOn = false;
+  if (g.keys.right && g.fuel > 0) {
+    car.vx += ENGINE_POWER;
+    engineOn = true;
+  }
+  if (g.keys.left) {
+    car.vx -= BRAKE_POWER;
   }
 
-  const cdOffset = offset;
-  const cdSize   = centralDir.reduce((s,b)=>s+b.length,0);
+  // ---- Fuel consumption ----
+  if (engineOn) {
+    g.fuel = Math.max(0, g.fuel - FUEL_DRAIN);
+    if (g.fuel === 0) endGame(g);
 
-  const eocd = new Uint8Array([
-    0x50,0x4B,0x05,0x06,         // signature
-    0x00,0x00,                    // disk number
-    0x00,0x00,                    // disk with CD
-    ...u16(files.length),
-    ...u16(files.length),
-    ...u32(cdSize),
-    ...u32(cdOffset),
-    0x00,0x00,                    // comment length
-  ]);
+    // Spawn exhaust particle
+    if (Math.random() < 0.4) {
+      g.particles.push({
+        x: car.x - 30 * Math.cos(car.angle),
+        y: car.y + 30 * Math.sin(car.angle),
+        vx: -1.5 - Math.random(),
+        vy: -1 - Math.random() * 0.8,
+        life: 1.0,
+        size: 4 + Math.random() * 4,
+      });
+    }
+  }
 
-  const allParts = [...localHeaders, ...centralDir, eocd];
-  const total    = allParts.reduce((s,b)=>s+b.length,0);
-  const out      = new Uint8Array(total);
-  let pos = 0;
-  for(const p of allParts){ out.set(p,pos); pos+=p.length; }
-  return out;
+  // ---- Cap speed ----
+  car.vx = Math.max(-MAX_SPEED * 0.5, Math.min(MAX_SPEED, car.vx));
+
+  // ---- Gravity ----
+  car.vy += GRAVITY;
+
+  // ---- World X from cameraX + fixed screen X ----
+  const worldX = g.cameraX + car.x;
+
+  // ---- Wheel positions (world coordinates) ----
+  const rearWorldX  = worldX - Math.cos(car.angle) * 30;
+  const frontWorldX = worldX + Math.cos(car.angle) * 30;
+
+  const rearGroundY  = getTerrainY(g, rearWorldX);
+  const frontGroundY = getTerrainY(g, frontWorldX);
+
+  // ---- Terrain angle at car position ----
+  const terrainAngle = getTerrainAngle(g, worldX);
+
+  // ---- Suspension spring physics ----
+  // Each wheel tries to sit WHEEL_RADIUS above terrain
+  function updateSuspension(susp, groundY, carWheelY) {
+    const diff = carWheelY - (groundY - WHEEL_RADIUS);
+    susp.vel += diff * SUSPENSION_K;
+    susp.vel *= DAMPING;
+    susp.offset += susp.vel;
+  }
+
+  const rearWheelY  = car.y + Math.sin(car.angle) * 30 + car.susp[0].offset;
+  const frontWheelY = car.y - Math.sin(car.angle) * 30 + car.susp[1].offset;
+
+  updateSuspension(car.susp[0], rearGroundY,  rearWheelY);
+  updateSuspension(car.susp[1], frontGroundY, frontWheelY);
+
+  // ---- Ground collision ----
+  const avgGroundY  = (rearGroundY + frontGroundY) / 2;
+  const carBottomY  = car.y + WHEEL_RADIUS + CAR_H / 2;
+
+  car.onGround = false;
+
+  if (carBottomY >= avgGroundY - 4) {
+    // Car is on or below ground — resolve collision
+    car.y = avgGroundY - WHEEL_RADIUS - CAR_H / 2;
+    car.vy = Math.min(car.vy, 0) * -0.25; // bounce damping
+
+    // Apply ground friction
+    car.vx *= FRICTION;
+    car.onGround = true;
+
+    // Align car angle toward terrain slope
+    const targetAngle = terrainAngle;
+    car.angularVel += (targetAngle - car.angle) * 0.12;
+    car.angularVel *= 0.6;
+
+    // Torque from engine (wheelspin causes rotation)
+    if (g.keys.right) car.angularVel += car.vx * 0.004;
+    if (g.keys.left)  car.angularVel -= 0.01;
+
+  } else {
+    // In the air — air friction, torque from angular vel
+    car.vx *= AIR_FRICTION;
+    car.angularVel *= 0.94; // slow rotation in air
+  }
+
+  // ---- Apply angular velocity ----
+  car.angle += car.angularVel;
+
+  // ---- Flip detection ----
+  // If car angle exceeds ±100° — it's flipped
+  if (Math.abs(car.angle) > 1.75) {
+    car.flipped = true;
+    endGame(g);
+  }
+
+  // ---- Clamp angle ----
+  car.angle = Math.max(-1.5, Math.min(1.5, car.angle));
+
+  // ---- Move car horizontally (world scrolls) ----
+  g.cameraX += car.vx;
+  g.distance = Math.floor(g.cameraX / 5); // rough meter conversion
+
+  // ---- Move particles ----
+  for (let i = g.particles.length - 1; i >= 0; i--) {
+    const p = g.particles[i];
+    p.x  += p.vx;
+    p.y  += p.vy;
+    p.vy += 0.04;
+    p.life -= 0.035;
+    if (p.life <= 0) g.particles.splice(i, 1);
+  }
+
+  // ---- Coin collection ----
+  for (const coin of g.coinList) {
+    if (coin.collected) continue;
+    const screenCX = coin.wx - g.cameraX;
+    const screenCY = coin.wy;
+    const dx = car.x - screenCX;
+    const dy = car.y - screenCY;
+    if (Math.sqrt(dx * dx + dy * dy) < WHEEL_RADIUS + COIN_RADIUS + 10) {
+      coin.collected = true;
+      g.coins++;
+    }
+  }
+
+  // ---- Trim offscreen coins ----
+  while (g.coinList.length > 0 && g.coinList[0].wx < g.cameraX - 200) {
+    g.coinList.shift();
+  }
+
+  // ---- Extend terrain when needed ----
+  const lastIdx = g.terrainOffset + g.terrain.length;
+  const neededIdx = Math.floor((g.cameraX + W * 2) / TERRAIN_SEGMENT);
+  if (neededIdx > lastIdx - 100) extendTerrain(g);
+
+  // ---- Trim old terrain to save memory ----
+  const dropBefore = Math.floor((g.cameraX - 200) / TERRAIN_SEGMENT) - g.terrainOffset;
+  if (dropBefore > 50) {
+    g.terrain.splice(0, dropBefore);
+    g.terrainOffset += dropBefore;
+  }
+
+  // ---- Spawn more coins ahead ----
+  spawnCoins(g);
 }
 
-/* ── download handler ── */
-function triggerDownload() {
-  const readme = `NeuroDesk Scheduler v2.4.1
-===========================
-Thank you for downloading NeuroDesk Scheduler!
+// =============================================================
+//  RENDERING
+// =============================================================
 
-QUICK START
------------
-1. Extract this ZIP to any folder on your PC.
-2. Double-click NeuroDesk.exe to launch.
-3. Your dashboard opens instantly — no install needed!
+/**
+ * Main render function — draws sky, terrain, coins, car, HUD.
+ */
+function render(g, time) {
+  ctx.clearRect(0, 0, W, H);
 
-SYSTEM REQUIREMENTS
--------------------
-- Windows 10 or 11 (64-bit)
-- 50 MB free disk space
-- No internet connection required
-
-FEATURES
---------
-- Smart Alarm System
-- Task Scheduler with drag-to-reorder
-- Countdown Timers (multiple simultaneous)
-- Custom Color Themes (12 presets + custom)
-- Fully Offline — all data stays local
-- Clean, distraction-free Dashboard
-
-SUPPORT
--------
-Website : https://neurodesk.app
-Email   : support@neurodesk.app
-GitHub  : https://github.com/neurodesk/scheduler
-
-Enjoy your organized day!
-`;
-
-  const changelog = `CHANGELOG — NeuroDesk Scheduler
-================================
-
-v2.4.1 (2026-03-15)
-- Fixed alarm snooze interval reset bug
-- Improved countdown timer accuracy
-- Added 3 new color themes
-
-v2.4.0 (2026-02-10)
-- New task drag-and-drop reorder
-- Keyboard shortcuts panel
-- Performance improvements
-
-v2.3.0 (2026-01-05)
-- Offline mode fully implemented
-- Custom theme builder added
-`;
-
-  const zipBytes = buildZip([
-    { name: 'README.txt',   content: readme },
-    { name: 'CHANGELOG.txt', content: changelog },
-    { name: 'NeuroDesk.exe.placeholder', content: '(Replace this file with the real executable in production)\r\nNeuroDesk Scheduler Executable Placeholder\r\n' },
-  ]);
-
-  const blob = new Blob([zipBytes], { type: 'application/zip' });
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
-  a.href     = url;
-  a.download = 'scheduler-app.zip';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-
-  /* button feedback */
-  [document.getElementById('downloadBtn'), document.getElementById('heroDownloadBtn')].forEach(btn => {
-    if (!btn) return;
-    const orig = btn.innerHTML;
-    btn.innerHTML = '✓ &nbsp;Download Started!';
-    btn.style.background = 'linear-gradient(135deg, #22d3a0, #0ea5e9)';
-    setTimeout(() => {
-      btn.innerHTML = orig;
-      btn.style.background = '';
-    }, 3000);
-  });
+  drawSky(g);
+  drawClouds(g, time);
+  drawTerrain(g);
+  drawCoins(g, time);
+  drawParticles(g);
+  drawCar(g);
+  updateHUD(g);
 }
 
-document.getElementById('downloadBtn').addEventListener('click', e => { e.preventDefault(); triggerDownload(); });
-document.getElementById('heroDownloadBtn').addEventListener('click', e => { e.preventDefault(); triggerDownload(); });
+// ---- Sky gradient ----
+function drawSky(g) {
+  const skyGrad = ctx.createLinearGradient(0, 0, 0, H * 0.7);
+  skyGrad.addColorStop(0,   '#0d1b3e');
+  skyGrad.addColorStop(0.5, '#1a3a6b');
+  skyGrad.addColorStop(1,   '#2d6a9f');
+  ctx.fillStyle = skyGrad;
+  ctx.fillRect(0, 0, W, H);
+}
 
-/* ── smooth anchor nav ── */
-document.querySelectorAll('a[href^="#"]').forEach(a => {
-  a.addEventListener('click', function(e) {
-    const target = document.querySelector(this.getAttribute('href'));
-    if (target) { e.preventDefault(); target.scrollIntoView({ behavior:'smooth' }); }
-  });
+// ---- Clouds (parallax scrolling) ----
+const CLOUDS = [
+  { x: 120, y: 60,  w: 120, h: 35, speed: 0.15 },
+  { x: 350, y: 40,  w: 90,  h: 28, speed: 0.12 },
+  { x: 600, y: 80,  w: 150, h: 42, speed: 0.18 },
+  { x: 800, y: 55,  w: 100, h: 30, speed: 0.14 },
+  { x: 1050, y: 70, w: 80,  h: 25, speed: 0.16 },
+  { x: 1300, y: 45, w: 130, h: 38, speed: 0.13 },
+];
+
+function drawClouds(g, time) {
+  ctx.fillStyle = 'rgba(255,255,255,0.12)';
+  for (const c of CLOUDS) {
+    const screenX = ((c.x - g.cameraX * c.speed) % (W + 300) + W + 300) % (W + 300) - 150;
+    drawCloud(screenX, c.y, c.w, c.h);
+  }
+}
+
+function drawCloud(x, y, w, h) {
+  ctx.beginPath();
+  ctx.ellipse(x, y, w / 2, h / 2, 0, 0, Math.PI * 2);
+  ctx.ellipse(x - w * 0.3, y + h * 0.1, w * 0.35, h * 0.45, 0, 0, Math.PI * 2);
+  ctx.ellipse(x + w * 0.3, y + h * 0.1, w * 0.32, h * 0.42, 0, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+// ---- Terrain ----
+function drawTerrain(g) {
+  if (g.terrain.length === 0) return;
+
+  // How many screen pixels each segment covers
+  const step = TERRAIN_SEGMENT;
+
+  // Starting segment index visible on screen
+  const startIdx = Math.floor(g.cameraX / step) - g.terrainOffset;
+  const endIdx   = startIdx + Math.ceil(W / step) + 2;
+
+  // ---- Ground fill (multi-layer) ----
+  // Top soil layer
+  ctx.beginPath();
+  ctx.moveTo(-10, H + 10);
+
+  for (let i = Math.max(0, startIdx); i < Math.min(endIdx, g.terrain.length); i++) {
+    const screenX = (i + g.terrainOffset) * step - g.cameraX;
+    ctx.lineTo(screenX, g.terrain[i]);
+  }
+
+  ctx.lineTo(W + 10, H + 10);
+  ctx.closePath();
+
+  const groundGrad = ctx.createLinearGradient(0, H * 0.4, 0, H);
+  groundGrad.addColorStop(0,   '#4a8c3f');
+  groundGrad.addColorStop(0.08,'#5aa64d');
+  groundGrad.addColorStop(0.12,'#7a4f2e');
+  groundGrad.addColorStop(1,   '#5a3820');
+  ctx.fillStyle = groundGrad;
+  ctx.fill();
+
+  // ---- Grass top edge highlight ----
+  ctx.beginPath();
+  ctx.moveTo(-10, H);
+
+  for (let i = Math.max(0, startIdx); i < Math.min(endIdx, g.terrain.length); i++) {
+    const screenX = (i + g.terrainOffset) * step - g.cameraX;
+    ctx.lineTo(screenX, g.terrain[i]);
+  }
+
+  ctx.strokeStyle = '#6ecf5f';
+  ctx.lineWidth = 3;
+  ctx.lineJoin = 'round';
+  ctx.stroke();
+
+  // ---- Rock layer (slightly below surface) ----
+  ctx.beginPath();
+  ctx.moveTo(-10, H + 10);
+
+  for (let i = Math.max(0, startIdx); i < Math.min(endIdx, g.terrain.length); i++) {
+    const screenX = (i + g.terrainOffset) * step - g.cameraX;
+    ctx.lineTo(screenX, g.terrain[i] + 22);
+  }
+
+  ctx.lineTo(W + 10, H + 10);
+  ctx.closePath();
+  ctx.fillStyle = '#7a5a3a';
+  ctx.fill();
+}
+
+// ---- Coins ----
+function drawCoins(g, time) {
+  for (const coin of g.coinList) {
+    if (coin.collected) continue;
+    const sx = coin.wx - g.cameraX;
+    if (sx < -40 || sx > W + 40) continue;
+
+    // Bob animation
+    const bobY = coin.wy + Math.sin(time * 0.002 + coin.bobPhase) * 5;
+
+    // Outer glow ring
+    ctx.beginPath();
+    ctx.arc(sx, bobY, COIN_RADIUS + 3, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255,210,0,0.2)';
+    ctx.fill();
+
+    // Coin body
+    const cGrad = ctx.createRadialGradient(sx - 3, bobY - 3, 1, sx, bobY, COIN_RADIUS);
+    cGrad.addColorStop(0, '#fff176');
+    cGrad.addColorStop(0.5, '#ffd200');
+    cGrad.addColorStop(1, '#f7971e');
+    ctx.beginPath();
+    ctx.arc(sx, bobY, COIN_RADIUS, 0, Math.PI * 2);
+    ctx.fillStyle = cGrad;
+    ctx.fill();
+
+    // Dollar sign
+    ctx.fillStyle = 'rgba(120,70,0,0.7)';
+    ctx.font = 'bold 13px Segoe UI';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('$', sx, bobY + 1);
+  }
+}
+
+// ---- Exhaust Particles ----
+function drawParticles(g) {
+  for (const p of g.particles) {
+    ctx.save();
+    ctx.globalAlpha = p.life * 0.6;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(180,160,100,${p.life * 0.8})`;
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+// ---- Car ----
+function drawCar(g) {
+  const car = g.car;
+  ctx.save();
+  ctx.translate(car.x, car.y);
+  ctx.rotate(car.angle);
+
+  // ---- Body shadow ----
+  ctx.fillStyle = 'rgba(0,0,0,0.25)';
+  ctx.beginPath();
+  ctx.ellipse(0, CAR_H / 2 + 6, CAR_W * 0.5, 8, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // ---- Main body ----
+  ctx.fillStyle = '#2563eb';   // blue body
+  ctx.beginPath();
+  ctx.roundRect(-CAR_W / 2, -CAR_H / 2, CAR_W, CAR_H, 6);
+  ctx.fill();
+
+  // ---- Cab (top) ----
+  ctx.fillStyle = '#1d4ed8';
+  ctx.beginPath();
+  ctx.roundRect(-CAR_W / 2 + 10, -CAR_H / 2 - 20, CAR_W - 20, 22, [6, 6, 0, 0]);
+  ctx.fill();
+
+  // ---- Windshield ----
+  ctx.fillStyle = 'rgba(150,220,255,0.7)';
+  ctx.beginPath();
+  ctx.roundRect(-CAR_W / 2 + 14, -CAR_H / 2 - 18, CAR_W - 38, 18, 4);
+  ctx.fill();
+
+  // ---- Body highlight ----
+  ctx.fillStyle = 'rgba(255,255,255,0.15)';
+  ctx.beginPath();
+  ctx.roundRect(-CAR_W / 2 + 2, -CAR_H / 2 + 2, CAR_W - 4, CAR_H / 3, 4);
+  ctx.fill();
+
+  // ---- Headlights ----
+  ctx.fillStyle = '#fef08a';
+  ctx.beginPath();
+  ctx.ellipse(CAR_W / 2 - 4, -4, 5, 4, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // ---- Taillights ----
+  ctx.fillStyle = '#f87171';
+  ctx.beginPath();
+  ctx.ellipse(-CAR_W / 2 + 4, -4, 5, 4, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // ---- Wheels (with suspension offsets) ----
+  drawWheel(ctx,  22, CAR_H / 2 + car.susp[1].offset);  // front wheel
+  drawWheel(ctx, -22, CAR_H / 2 + car.susp[0].offset);  // rear wheel
+
+  ctx.restore();
+}
+
+/**
+ * Draw a single wheel at local coordinates (cx, cy).
+ */
+function drawWheel(ctx, cx, cy) {
+  // Tire
+  ctx.fillStyle = '#1a1a2e';
+  ctx.beginPath();
+  ctx.arc(cx, cy, WHEEL_RADIUS, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Tire tread
+  ctx.strokeStyle = '#2d2d4e';
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.arc(cx, cy, WHEEL_RADIUS - 2, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Hub
+  ctx.fillStyle = '#94a3b8';
+  ctx.beginPath();
+  ctx.arc(cx, cy, 5, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Spokes
+  ctx.strokeStyle = '#64748b';
+  ctx.lineWidth = 1.5;
+  for (let s = 0; s < 4; s++) {
+    const a = (s / 4) * Math.PI * 2;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(cx + Math.cos(a) * (WHEEL_RADIUS - 3), cy + Math.sin(a) * (WHEEL_RADIUS - 3));
+    ctx.stroke();
+  }
+}
+
+// ---- HUD update ----
+function updateHUD(g) {
+  // Fuel bar
+  const fuelPct = Math.max(0, g.fuel);
+  fuelBar.style.width = fuelPct + '%';
+  if (fuelPct < 20) {
+    fuelBar.style.background = 'linear-gradient(90deg, #ef4444, #f97316)';
+  } else if (fuelPct < 50) {
+    fuelBar.style.background = 'linear-gradient(90deg, #f97316, #fbbf24)';
+  } else {
+    fuelBar.style.background = 'linear-gradient(90deg, #f7971e, #ffd200)';
+  }
+
+  // Distance
+  distDisplay.innerHTML = `${g.distance} <span>m</span>`;
+
+  // Coins
+  document.getElementById('coinCount').textContent = g.coins;
+}
+
+// =============================================================
+//  GAME LOOP
+// =============================================================
+
+let lastTime = 0;
+
+/**
+ * Main loop — called every frame via requestAnimationFrame.
+ */
+function gameLoop(timestamp) {
+  if (!game.running) return;
+
+  const dt = Math.min(timestamp - lastTime, 32); // cap dt to avoid spiral
+  lastTime = timestamp;
+
+  updatePhysics(game, dt);
+  render(game, timestamp);
+
+  game.frameId = requestAnimationFrame(gameLoop);
+}
+
+// =============================================================
+//  GAME OVER & RESTART
+// =============================================================
+
+function endGame(g) {
+  if (!g.running) return;
+  g.running = false;
+  cancelAnimationFrame(g.frameId);
+
+  // Show game over screen
+  finalDist.textContent  = g.distance + ' m';
+  finalCoins.textContent = g.coins;
+  gameOverEl.classList.add('visible');
+}
+
+function restartGame() {
+  // Cancel any existing loop
+  if (game && game.frameId) cancelAnimationFrame(game.frameId);
+
+  // Hide game over screen
+  gameOverEl.classList.remove('visible');
+
+  // Create fresh state
+  game = createGameState();
+  spawnCoins(game);
+
+  // Start loop
+  lastTime = performance.now();
+  game.frameId = requestAnimationFrame(gameLoop);
+}
+
+// =============================================================
+//  INPUT HANDLING
+// =============================================================
+
+document.addEventListener('keydown', (e) => {
+  if (!game) return;
+
+  switch (e.code) {
+    case 'ArrowRight': game.keys.right = true;  e.preventDefault(); break;
+    case 'ArrowLeft':  game.keys.left  = true;  e.preventDefault(); break;
+    case 'Space':
+      e.preventDefault();
+      restartGame();
+      break;
+  }
 });
+
+document.addEventListener('keyup', (e) => {
+  if (!game) return;
+  switch (e.code) {
+    case 'ArrowRight': game.keys.right = false; break;
+    case 'ArrowLeft':  game.keys.left  = false; break;
+  }
+});
+
+// ===== Touch support (mobile) =====
+let touchLeft = false, touchRight = false;
+
+canvas.addEventListener('touchstart', (e) => {
+  e.preventDefault();
+  for (const t of e.changedTouches) {
+    if (t.clientX > canvas.getBoundingClientRect().left + W / 2) touchRight = true;
+    else touchLeft = true;
+  }
+  if (game) { game.keys.right = touchRight; game.keys.left = touchLeft; }
+}, { passive: false });
+
+canvas.addEventListener('touchend', (e) => {
+  e.preventDefault();
+  touchLeft = false; touchRight = false;
+  if (game) { game.keys.right = false; game.keys.left = false; }
+}, { passive: false });
+
+// =============================================================
+//  BOOT
+// =============================================================
+
+// Check if roundRect is available (some older browsers lack it)
+if (!CanvasRenderingContext2D.prototype.roundRect) {
+  CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
+    const rr = Array.isArray(r) ? r : [r, r, r, r];
+    this.beginPath();
+    this.moveTo(x + rr[0], y);
+    this.lineTo(x + w - rr[1], y);
+    this.quadraticCurveTo(x + w, y, x + w, y + rr[1]);
+    this.lineTo(x + w, y + h - rr[2]);
+    this.quadraticCurveTo(x + w, y + h, x + w - rr[2], y + h);
+    this.lineTo(x + rr[3], y + h);
+    this.quadraticCurveTo(x, y + h, x, y + h - rr[3]);
+    this.lineTo(x, y + rr[0]);
+    this.quadraticCurveTo(x, y, x + rr[0], y);
+    this.closePath();
+    return this;
+  };
+}
+
+// Start the game!
+restartGame();
 </script>
 </body>
 </html>
